@@ -33,8 +33,8 @@
   --safe-top:env(safe-area-inset-top,0px);
   --safe-bottom:env(safe-area-inset-bottom,0px);
 }
-html,body{width:100%;height:100%;background:#DDD8D2;font-family:var(--fb);overflow:hidden;}
-.shell{width:100%;height:100dvh;display:flex;flex-direction:column;background:var(--warm);overflow:hidden;position:relative;}
+html,body{width:100%;height:100%;background:#DDD8D2;font-family:var(--fb);overflow:hidden;}body{display:flex;justify-content:center;}
+.shell{width:100%;max-width:480px;margin:0 auto;height:100dvh;display:flex;flex-direction:column;background:var(--warm);overflow:hidden;position:relative;}
 .sbar{background:var(--sage);padding:calc(var(--safe-top)+8px) 20px 8px;display:flex;justify-content:space-between;align-items:center;color:#fff;font-size:13px;flex-shrink:0;}
 .hdr{background:var(--sage);padding:10px 20px 16px;color:#fff;position:relative;overflow:hidden;flex-shrink:0;}
 .hdr::after{content:'';position:absolute;right:-20px;top:-20px;width:110px;height:110px;border-radius:50%;border:24px solid rgba(255,255,255,0.07);}
@@ -48,7 +48,7 @@ html,body{width:100%;height:100%;background:#DDD8D2;font-family:var(--fb);overfl
 .ntab{flex:1;min-width:52px;padding:9px 2px 7px;text-align:center;font-size:9px;color:var(--txt3);cursor:pointer;border-bottom:2.5px solid transparent;transition:all .2s;font-family:var(--fb);font-weight:700;letter-spacing:.2px;text-transform:uppercase;white-space:nowrap;-webkit-user-select:none;user-select:none;}
 .ntab.on{color:var(--sage);border-bottom-color:var(--sage);}
 .nic{display:block;margin:0 auto 2px;width:16px;height:16px;}
-.cont{flex:1;overflow-y:auto;padding:12px 14px calc(80px + var(--safe-bottom));-webkit-overflow-scrolling:touch;overscroll-behavior:contain;}
+.cont{flex:1;overflow-y:auto;padding:12px 16px calc(80px + var(--safe-bottom));-webkit-overflow-scrolling:touch;overscroll-behavior:contain;}
 .tab{display:none;}.tab.on{display:block;}
 
 /* CARDS */
@@ -577,6 +577,7 @@ select.finp{cursor:pointer;}
     </div>
     <div class="fld">
       <label class="flbl" id="m_lbl_hor">Horarios de toma</label>
+      <div style="font-size:11px;color:var(--txt3);margin-bottom:5px;">Atajos rápidos:</div>
       <div class="tchips" id="timeChips"></div>
       <div style="display:flex;gap:8px;margin-top:8px;align-items:center;">
         <select class="finp" id="mHorH" style="flex:1;padding:10px 8px;"></select>
@@ -761,6 +762,35 @@ en:{appTitle:'My Medicines',sub:'Your personal health assistant',
 ['pt','fr','de','it','zh','ja'].forEach(l=>{TX[l]=Object.assign({},TX.es,{appTitle:{pt:'Meus Remedios',fr:'Mes Medicaments',de:'Meine Medikamente',it:'I Miei Farmaci',zh:'Wo De Yao',ja:'Watashi no Kusuri'}[l]||TX.es.appTitle});});
 
 /* ── MEDICINE DB ── */
+const DRUG_INFO={
+  'Paracetamol':'Analgésico y antipirético. Se usa para dolor leve a moderado y fiebre. No tomar más de 3-4 g al día. Evitar con alcohol.',
+  'Ibuprofeno':'Antiinflamatorio no esteroidal. Alivia dolor, inflamación y fiebre. Tomar con alimentos para proteger el estómago.',
+  'Aspirina':'Analgésico y antiagregante plaquetario. Dosis bajas previenen coágulos. No usar en niños menores de 16 años.',
+  'Amoxicilina':'Antibiótico del grupo penicilina. Completar el tratamiento aunque mejore antes. Puede causar reacciones alérgicas.',
+  'Omeprazol':'Inhibidor de la bomba de protones. Reduce el ácido gástrico. Tomar 30 min antes del desayuno.',
+  'Metformina':'Antidiabético oral. Reduce la glucosa en sangre. Tomar con alimentos para reducir molestias digestivas.',
+  'Enalapril':'Inhibidor de la ECA. Reduce la presión arterial y protege el corazón. Puede causar tos seca.',
+  'Atorvastatina':'Estatina. Reduce el colesterol LDL. Tomar preferentemente en la noche. Control periódico de enzimas hepáticas.',
+  'Levotiroxina':'Hormona tiroidea sintética. Tomar en ayunas 30 min antes del desayuno. Controles periódicos de TSH.',
+  'Losartan':'Antagonista de angiotensina II. Reduce la presión arterial. Alternativa al Enalapril sin causar tos.',
+  'Amlodipino':'Bloqueador de canales de calcio. Reduce la presión arterial y previene angina. Puede causar edema en piernas.',
+  'Metoprolol':'Betabloqueador. Reduce la frecuencia cardíaca y la presión arterial. No suspender abruptamente.',
+  'Furosemida':'Diurético de asa. Elimina líquidos. Tomar en la mañana para evitar despertar por las noches.',
+  'Alprazolam':'Benzodiacepina. Ansiolítico de acción corta. Puede causar dependencia. No suspender bruscamente.',
+  'Salbutamol':'Broncodilatador. Alivia el broncoespasmo en asma y EPOC. Usar según necesidad o antes del ejercicio.',
+  'Clonazepam':'Benzodiacepina antiepiléptica y ansiolítica. Puede causar somnolencia y dependencia.',
+  'Fluoxetina':'Antidepresivo ISRS. Efecto tarda 2-4 semanas. No suspender bruscamente. Puede causar insomnio inicial.',
+  'Sertralina':'Antidepresivo ISRS. Tomar con alimentos. Efecto en 2-4 semanas. Seguro en embarazo bajo supervisión.',
+  'Vitamina D3':'Regula la absorción de calcio y fósforo. Fundamental para huesos, sistema inmune y estado de ánimo.',
+  'Vitamina C':'Antioxidante. Refuerza el sistema inmune y la síntesis de colágeno. Megadosis puede causar cálculos renales.',
+  'Omega-3':'Ácidos grasos esenciales. Reduce triglicéridos, inflamación y protege el corazón. Tomar con alimentos.',
+  'Melatonina':'Hormona del sueño. Regula el ciclo circadiano. Tomar 30-60 min antes de dormir. Dosis bajas son más efectivas.',
+  'Metronidazol':'Antibiótico y antiparasitario. No consumir alcohol durante el tratamiento. Puede causar sabor metálico.',
+  'Ciprofloxacino':'Antibiótico quinolona. No tomar con lácteos ni antiácidos. Puede afectar tendones en adultos mayores.',
+  'Prednisona':'Corticosteroide. Antiinflamatorio potente. No suspender bruscamente. Tomar con alimentos. Control de glucosa.',
+  'Warfarina':'Anticoagulante oral. Requiere controles periódicos de INR. Interacciones con muchos alimentos y medicamentos.'
+};
+
 const AC_DB=[
   {n:'Paracetamol',d:'500 mg',t:'remedio',doses:['250 mg','500 mg','1 g']},
   {n:'Ibuprofeno',d:'400 mg',t:'remedio',doses:['200 mg','400 mg','600 mg']},
@@ -811,13 +841,88 @@ const AC_DB=[
   {n:'Ginkgo Biloba',d:'120 mg',t:'suplemento',doses:['60 mg','120 mg']},
   {n:'Curcuma',d:'500 mg',t:'suplemento',doses:['250 mg','500 mg','1000 mg']},
   {n:'Ashwagandha',d:'300 mg',t:'suplemento',doses:['300 mg','600 mg']},
-  {n:'Biotina',d:'5000 mcg',t:'suplemento',doses:['1000 mcg','5000 mcg']}
+  {n:'Biotina',d:'5000 mcg',t:'suplemento',doses:['1000 mcg','5000 mcg']},
+  // Remedios adicionales comunes Chile
+  {n:'Ketoprofeno',d:'100 mg',t:'remedio',doses:['50 mg','100 mg','200 mg']},
+  {n:'Diclofenaco',d:'50 mg',t:'remedio',doses:['25 mg','50 mg','75 mg','100 mg']},
+  {n:'Naproxeno',d:'500 mg',t:'remedio',doses:['250 mg','500 mg','550 mg']},
+  {n:'Tramadol',d:'50 mg',t:'remedio',doses:['50 mg','100 mg']},
+  {n:'Codeina',d:'30 mg',t:'remedio',doses:['15 mg','30 mg','60 mg']},
+  {n:'Lansoprazol',d:'30 mg',t:'remedio',doses:['15 mg','30 mg']},
+  {n:'Pantoprazol',d:'40 mg',t:'remedio',doses:['20 mg','40 mg']},
+  {n:'Esomeprazol',d:'20 mg',t:'remedio',doses:['20 mg','40 mg']},
+  {n:'Hidroclorotiazida',d:'25 mg',t:'remedio',doses:['12.5 mg','25 mg','50 mg']},
+  {n:'Espironolactona',d:'25 mg',t:'remedio',doses:['25 mg','50 mg','100 mg']},
+  {n:'Bisoprolol',d:'5 mg',t:'remedio',doses:['2.5 mg','5 mg','10 mg']},
+  {n:'Carvedilol',d:'12.5 mg',t:'remedio',doses:['6.25 mg','12.5 mg','25 mg']},
+  {n:'Valsartan',d:'80 mg',t:'remedio',doses:['40 mg','80 mg','160 mg','320 mg']},
+  {n:'Irbesartan',d:'150 mg',t:'remedio',doses:['75 mg','150 mg','300 mg']},
+  {n:'Olmesartan',d:'20 mg',t:'remedio',doses:['10 mg','20 mg','40 mg']},
+  {n:'Rosuvastatina',d:'10 mg',t:'remedio',doses:['5 mg','10 mg','20 mg','40 mg']},
+  {n:'Pravastatina',d:'20 mg',t:'remedio',doses:['10 mg','20 mg','40 mg']},
+  {n:'Fenofibrato',d:'200 mg',t:'remedio',doses:['145 mg','200 mg']},
+  {n:'Glibenclamida',d:'5 mg',t:'remedio',doses:['2.5 mg','5 mg']},
+  {n:'Glimepirida',d:'2 mg',t:'remedio',doses:['1 mg','2 mg','4 mg']},
+  {n:'Sitagliptina',d:'100 mg',t:'remedio',doses:['50 mg','100 mg']},
+  {n:'Empagliflozina',d:'10 mg',t:'remedio',doses:['10 mg','25 mg']},
+  {n:'Insulina glargina',d:'10 UI',t:'remedio',doses:['10 UI','20 UI','30 UI']},
+  {n:'Insulina NPH',d:'10 UI',t:'remedio',doses:['10 UI','20 UI','30 UI']},
+  {n:'Levonorgestrel',d:'0.03 mg',t:'remedio',doses:['0.03 mg','0.15 mg']},
+  {n:'Etinilestradiol',d:'0.03 mg',t:'remedio',doses:['0.02 mg','0.03 mg','0.05 mg']},
+  {n:'Paroxetina',d:'20 mg',t:'remedio',doses:['10 mg','20 mg','30 mg','40 mg']},
+  {n:'Escitalopram',d:'10 mg',t:'remedio',doses:['5 mg','10 mg','20 mg']},
+  {n:'Venlafaxina',d:'75 mg',t:'remedio',doses:['37.5 mg','75 mg','150 mg']},
+  {n:'Quetiapina',d:'25 mg',t:'remedio',doses:['25 mg','50 mg','100 mg','200 mg']},
+  {n:'Risperidona',d:'2 mg',t:'remedio',doses:['0.5 mg','1 mg','2 mg','3 mg','4 mg']},
+  {n:'Olanzapina',d:'5 mg',t:'remedio',doses:['2.5 mg','5 mg','10 mg','15 mg']},
+  {n:'Carbamazepina',d:'200 mg',t:'remedio',doses:['100 mg','200 mg','400 mg']},
+  {n:'Acido valproico',d:'500 mg',t:'remedio',doses:['250 mg','500 mg','750 mg','1000 mg']},
+  {n:'Lamotrigina',d:'25 mg',t:'remedio',doses:['25 mg','50 mg','100 mg','200 mg']},
+  {n:'Levetiracetam',d:'500 mg',t:'remedio',doses:['250 mg','500 mg','1000 mg']},
+  {n:'Fenitoina',d:'100 mg',t:'remedio',doses:['100 mg']},
+  {n:'Azitromicina',d:'500 mg',t:'remedio',doses:['250 mg','500 mg']},
+  {n:'Claritromicina',d:'500 mg',t:'remedio',doses:['250 mg','500 mg']},
+  {n:'Doxiciclina',d:'100 mg',t:'remedio',doses:['50 mg','100 mg']},
+  {n:'Clindamicina',d:'300 mg',t:'remedio',doses:['150 mg','300 mg','600 mg']},
+  {n:'Fluconazol',d:'150 mg',t:'remedio',doses:['50 mg','100 mg','150 mg','200 mg']},
+  {n:'Betahistina',d:'16 mg',t:'remedio',doses:['8 mg','16 mg','24 mg']},
+  {n:'Ondansetron',d:'4 mg',t:'remedio',doses:['4 mg','8 mg']},
+  {n:'Metoclopramida',d:'10 mg',t:'remedio',doses:['5 mg','10 mg']},
+  {n:'Loperamida',d:'2 mg',t:'remedio',doses:['2 mg']},
+  {n:'Loratadina',d:'10 mg',t:'remedio',doses:['5 mg','10 mg']},
+  {n:'Cetirizina',d:'10 mg',t:'remedio',doses:['5 mg','10 mg']},
+  {n:'Fexofenadina',d:'120 mg',t:'remedio',doses:['60 mg','120 mg','180 mg']},
+  {n:'Montelukast',d:'10 mg',t:'remedio',doses:['4 mg','5 mg','10 mg']},
+  {n:'Budesonida',d:'200 mcg',t:'remedio',doses:['100 mcg','200 mcg','400 mcg']},
+  {n:'Fluticasona',d:'250 mcg',t:'remedio',doses:['50 mcg','100 mcg','250 mcg','500 mcg']},
+  {n:'Tiotropio',d:'18 mcg',t:'remedio',doses:['18 mcg']},
+  {n:'Salmeterol',d:'50 mcg',t:'remedio',doses:['25 mcg','50 mcg']},
+  {n:'Sildenafil',d:'50 mg',t:'remedio',doses:['25 mg','50 mg','100 mg']},
+  {n:'Tamsulosina',d:'0.4 mg',t:'remedio',doses:['0.4 mg']},
+  {n:'Dutasterida',d:'0.5 mg',t:'remedio',doses:['0.5 mg']},
+  {n:'Finasterida',d:'5 mg',t:'remedio',doses:['1 mg','5 mg']},
+  {n:'Allopurinol',d:'100 mg',t:'remedio',doses:['100 mg','300 mg']},
+  {n:'Colchicina',d:'0.5 mg',t:'remedio',doses:['0.5 mg','1 mg']},
+  {n:'Bifosfonato',d:'70 mg',t:'remedio',doses:['35 mg','70 mg']},
+  {n:'Alendronato',d:'70 mg',t:'remedio',doses:['10 mg','70 mg']},
+  {n:'Calcitriol',d:'0.25 mcg',t:'vitamina',doses:['0.25 mcg','0.5 mcg']},
+  {n:'Vitamina D',d:'400 UI',t:'vitamina',doses:['400 UI','800 UI','1000 UI','2000 UI']},
+  {n:'Hierro polimaltosa',d:'100 mg',t:'vitamina',doses:['50 mg','100 mg']},
+  {n:'Acido ascorbico',d:'500 mg',t:'vitamina',doses:['250 mg','500 mg','1000 mg']},
+  {n:'Luteina',d:'20 mg',t:'suplemento',doses:['10 mg','20 mg']},
+  {n:'Aceite de pescado',d:'1000 mg',t:'suplemento',doses:['500 mg','1000 mg','2000 mg']},
+  {n:'Espirulina',d:'3 g',t:'suplemento',doses:['1 g','3 g','5 g']},
+  {n:'Chlorella',d:'3 g',t:'suplemento',doses:['1 g','3 g']},
+  {n:'Berberina',d:'500 mg',t:'suplemento',doses:['250 mg','500 mg']},
+  {n:'N-Acetil Cisteina',d:'600 mg',t:'suplemento',doses:['300 mg','600 mg']},
+  {n:'DHEA',d:'25 mg',t:'suplemento',doses:['10 mg','25 mg','50 mg']},
+  {n:'Resveratrol',d:'100 mg',t:'suplemento',doses:['50 mg','100 mg','250 mg']}
 ];
 const COMMON_DOSES=['1 capsula','1 tableta','1 comprimido','5 ml','10 ml','2 capsulas','2 tabletas','1 ampolla','2 puff','5 gotas','10 gotas'];
 // Genera slots de 00:00 a 23:55 cada 5 minutos
 const TIMES=(function(){const t=[];for(let h=0;h<24;h++)for(let m=0;m<60;m+=5)t.push((h<10?'0':'')+h+':'+(m<10?'0':'')+m);return t;})();
 // Horarios sugeridos rápidos
-const QUICK_TIMES=['06:00','08:00','10:00','12:00','14:00','16:00','18:00','20:00','22:00'];
+const QUICK_TIMES=['07:00','08:00','12:00','14:00','18:00','20:00','22:00','00:00'];
 const MES_ES=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
 const MES_EN=['January','February','March','April','May','June','July','August','September','October','November','December'];
 const DIA_ES=['Dom','Lun','Mar','Mie','Jue','Vie','Sab'];
@@ -971,8 +1076,38 @@ function checkAlarms(){
     if(!p.alarma)return;
     if(p.repeatType==='once'&&p.createdDate&&p.createdDate!==today)return;
     if(p.repeatType==='custom'&&p.repeatDays&&!p.repeatDays.includes(dayNum))return;
-    p.horarios.forEach(function(h){const k=today+'_al_'+p.id+'_'+h;if(h===cur&&!alarmFired[k]){alarmFired[k]=true;showToast(p.nombre,p.dosis,h);}});
+    p.horarios.forEach(function(h){
+      const k=today+'_al_'+p.id+'_'+h;
+      if(h===cur&&!alarmFired[k]){
+        alarmFired[k]=true;
+        showToast(p.nombre,p.dosis,h);
+        // Notificación del sistema (suena aunque la pantalla esté apagada si tiene permiso)
+        showSystemNotif(
+          'Mis Remedios — Es hora de tu medicamento',
+          p.nombre+(p.dosis?' · '+p.dosis:'')+' — '+h,
+          'alarm-'+p.id+'-'+h
+        );
+        // Sonido de alarma
+        playAlarmSound();
+      }
+    });
   });
+}
+function playAlarmSound(){
+  try{
+    const ctx=new (window.AudioContext||window.webkitAudioContext)();
+    [0,0.3,0.6].forEach(function(t){
+      const osc=ctx.createOscillator();
+      const gain=ctx.createGain();
+      osc.connect(gain);gain.connect(ctx.destination);
+      osc.frequency.value=880;
+      osc.type='sine';
+      gain.gain.setValueAtTime(0.5,ctx.currentTime+t);
+      gain.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+t+0.4);
+      osc.start(ctx.currentTime+t);
+      osc.stop(ctx.currentTime+t+0.4);
+    });
+  }catch(e){}
 }
 function showToast(nombre,dosis,hora){
   document.getElementById('toastTitle').textContent=t('toastTitle');
@@ -1167,7 +1302,7 @@ function goTab(tab){
 
 /* ── ADD MODAL ── */
 function buildChips(){
-  // Chips de horarios rápidos sugeridos
+  // Chips de horarios rápidos sugeridos (atajos comunes)
   const c=document.getElementById('timeChips');
   if(!c)return;
   c.innerHTML=QUICK_TIMES.map(function(h){return '<button class="tchip '+(selTimes.includes(h)?'on':'')+'" onclick="toggleQuickTime(this,\''+h+'\')">'+h+'</button>';}).join('');
@@ -1274,8 +1409,31 @@ function acSearchName(q){
 function acSelectName(name){
   document.getElementById('mNom').value=name;
   const found=AC_DB.find(function(x){return x.n===name;});
-  if(found){document.getElementById('mDos').value=found.d;selType(found.t);currentAcDoses=found.doses||[found.d];}
+  if(found){
+    document.getElementById('mDos').value=found.d;
+    selType(found.t);
+    currentAcDoses=found.doses||[found.d];
+    // Mostrar reseña del medicamento si existe
+    showDrugInfo(found);
+  }
   hideAc('acListNom');
+}
+function showDrugInfo(drug){
+  let infoEl=document.getElementById('drugInfoBox');
+  if(!infoEl){
+    infoEl=document.createElement('div');
+    infoEl.id='drugInfoBox';
+    infoEl.style.cssText='background:var(--sage-l);border:1.5px solid var(--sage-m);border-radius:12px;padding:10px 12px;margin-top:8px;font-size:12px;color:var(--sage-d);line-height:1.5;';
+    const nomFld=document.getElementById('mNom').closest('.ac-wrap')||document.getElementById('mNom').parentNode;
+    nomFld.appendChild(infoEl);
+  }
+  const info=DRUG_INFO[drug.n]||null;
+  if(info){
+    infoEl.innerHTML='<strong style="font-size:11px;text-transform:uppercase;letter-spacing:.5px;">'+drug.n+'</strong><br>'+info;
+    infoEl.style.display='block';
+  } else {
+    infoEl.style.display='none';
+  }
 }
 function acSearchDose(q){
   let suggestions=[];
