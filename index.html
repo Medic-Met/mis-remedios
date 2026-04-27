@@ -1244,7 +1244,7 @@ setInterval(tick,10000);tick();
 // Register Service Worker
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
-    navigator.serviceWorker.register('/sw.js').then(function(reg) {
+    navigator.serviceWorker.register('/mis-remedios/sw.js').then(function(reg) {
       console.log('SW registered:', reg.scope);
       // Listen for messages from SW
       navigator.serviceWorker.addEventListener('message', function(event) {
@@ -1258,8 +1258,9 @@ if ('serviceWorker' in navigator) {
   });
 }
 
-// Request notification permission on first interaction
-function requestNotificationPermission() {
+// Request notification permission on first interaction — ver FCM abajo
+// (función reemplazada por FCM)
+function _requestNotificationPermission_legacy() {
   if ('Notification' in window && Notification.permission === 'default') {
     Notification.requestPermission().then(function(perm) {
       if (perm === 'granted') {
@@ -1276,8 +1277,8 @@ function showSystemNotif(title, body, tag) {
       navigator.serviceWorker.ready.then(function(reg) {
         reg.showNotification(title, {
           body: body,
-          icon: '/icon-192.png',
-          badge: '/icon-72.png',
+          icon: '/mis-remedios/icon-192.png',
+          badge: '/mis-remedios/icon-72.png',
           vibrate: [300, 100, 300],
           tag: tag || 'mr-notif',
           requireInteraction: true,
@@ -1287,7 +1288,7 @@ function showSystemNotif(title, body, tag) {
         });
       });
     } else {
-      new Notification(title, { body: body, icon: '/icon-192.png' });
+      new Notification(title, { body: body, icon: '/mis-remedios/icon-192.png' });
     }
   }
 }
@@ -1336,6 +1337,67 @@ function scheduleAllAlarms() {
       scheduleAlarmNotif(p.nombre, p.dosis, h);
     });
   });
+}
+
+
+/* ─────────────────────────────────────────────
+   FIREBASE CLOUD MESSAGING — Notificaciones Push
+   Permite alarmas aunque el celular esté bloqueado
+───────────────────────────────────────────── */
+
+const FCM_VAPID = 'BFKtVqE-fCj8nshSPcVYNMUX1v55xeFxx7ISGHcJIKx4axezDlVUEXqg276Y_rfEbYAn0BohX6WBuP3cY9Zzm7E';
+
+async function iniciarFCM() {
+  if (!('serviceWorker' in navigator)) return;
+  try {
+    const { initializeApp } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js');
+    const { getMessaging, getToken, onMessage } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging.js');
+
+    const app = initializeApp({
+      apiKey: "AIzaSyDWXhkBh7VJHnQrolpPZt6VPYZzlE4iOSc",
+      authDomain: "mis-remedios-app.firebaseapp.com",
+      projectId: "mis-remedios-app",
+      storageBucket: "mis-remedios-app.firebasestorage.app",
+      messagingSenderId: "397370003949",
+      appId: "1:397370003949:web:6860dd226833ba9d25d7e4"
+    });
+
+    const messaging = getMessaging(app);
+    const reg = await navigator.serviceWorker.ready;
+
+    const token = await getToken(messaging, {
+      vapidKey: FCM_VAPID,
+      serviceWorkerRegistration: reg
+    });
+
+    if (token) {
+      localStorage.setItem('fcm_token', token);
+      console.log('FCM listo. Token guardado.');
+    }
+
+    // Notificaciones cuando la app está abierta
+    onMessage(messaging, payload => {
+      const { title, body } = payload.notification || {};
+      showSystemNotif(title || 'Mis Remedios', body || 'Es hora de tu medicamento');
+    });
+
+  } catch(err) {
+    console.warn('FCM no disponible:', err.message);
+  }
+}
+
+// Iniciar FCM al cargar si ya tiene permiso, o al pedirlo
+function requestNotificationPermission() {
+  if ('Notification' in window && Notification.permission === 'default') {
+    Notification.requestPermission().then(function(perm) {
+      if (perm === 'granted') {
+        showSystemNotif('Mis Remedios', 'Notificaciones activadas. Te avisaremos a la hora exacta.');
+        iniciarFCM();
+      }
+    });
+  } else if (Notification.permission === 'granted') {
+    iniciarFCM();
+  }
 }
 
 // Banner to request permission if not yet granted
