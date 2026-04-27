@@ -157,6 +157,8 @@ select.finp{cursor:pointer;}
 /* TIME CHIPS */
 .tchips{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;}
 .tchip{padding:9px 4px;border-radius:10px;border:1.5px solid var(--bdr);font-size:12px;cursor:pointer;background:#fff;color:var(--txt2);font-family:var(--fb);text-align:center;transition:all .2s;}
+.dunit-btn{padding:5px 10px;border-radius:20px;border:1.5px solid var(--bdr);font-size:11px;cursor:pointer;background:#fff;color:var(--txt2);font-family:var(--fb);transition:all .2s;}
+.dunit-btn:active{background:var(--sage-l);border-color:var(--sage);color:var(--sage-d);}
 .tchip.on{background:var(--sage-l);border-color:var(--sage);color:var(--sage-d);font-weight:700;border-width:2px;}
 
 /* REPEAT */
@@ -554,8 +556,16 @@ select.finp{cursor:pointer;}
     </div>
     <div class="fld ac-wrap">
       <label class="flbl" id="m_lbl_dos">Dosis</label>
-      <input class="finp" id="mDos" autocomplete="off" oninput="acSearchDose(this.value)" onfocus="acSearchDose(this.value)" placeholder="Ej: 500 mg, 1 capsula..." />
+      <input class="finp" id="mDos" autocomplete="off" oninput="acSearchDose(this.value)" onfocus="acSearchDose(this.value)" placeholder="Ej: 500 mg, 1 comprimido..." />
       <div class="ac-list hidden" id="acListDos"></div>
+      <div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:6px;">
+        <button type="button" onclick="addDosisUnit('mg')" class="dunit-btn">mg</button>
+        <button type="button" onclick="addDosisUnit('ml')" class="dunit-btn">ml</button>
+        <button type="button" onclick="addDosisUnit('comprimido')" class="dunit-btn">comprimido</button>
+        <button type="button" onclick="addDosisUnit('capsula')" class="dunit-btn">capsula</button>
+        <button type="button" onclick="addDosisUnit('gota')" class="dunit-btn">gota</button>
+        <button type="button" onclick="addDosisUnit('sobre')" class="dunit-btn">sobre</button>
+      </div>
     </div>
     <div class="fld">
       <label class="flbl" id="m_lbl_tipo">Tipo</label>
@@ -568,7 +578,13 @@ select.finp{cursor:pointer;}
     <div class="fld">
       <label class="flbl" id="m_lbl_hor">Horarios de toma</label>
       <div class="tchips" id="timeChips"></div>
-      <input class="finp" id="mHorC" style="margin-top:8px;" placeholder="Otro horario: HH:MM" />
+      <div style="display:flex;gap:8px;margin-top:8px;align-items:center;">
+        <select class="finp" id="mHorH" style="flex:1;padding:10px 8px;"></select>
+        <span style="font-size:18px;color:var(--txt2);font-weight:700;">:</span>
+        <select class="finp" id="mHorM" style="flex:1;padding:10px 8px;"></select>
+        <button type="button" onclick="addCustomTime()" style="background:var(--sage);color:#fff;border:none;border-radius:10px;padding:10px 14px;font-size:13px;cursor:pointer;white-space:nowrap;" id="btn_add_time">+ Agregar</button>
+      </div>
+      <div id="selTimesList" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;"></div>
     </div>
     <div class="fld">
       <label class="flbl" id="m_lbl_alarm">Activar alarma</label>
@@ -798,7 +814,10 @@ const AC_DB=[
   {n:'Biotina',d:'5000 mcg',t:'suplemento',doses:['1000 mcg','5000 mcg']}
 ];
 const COMMON_DOSES=['1 capsula','1 tableta','1 comprimido','5 ml','10 ml','2 capsulas','2 tabletas','1 ampolla','2 puff','5 gotas','10 gotas'];
-const TIMES=['06:00','08:00','10:00','12:00','14:00','16:00','18:00','20:00','22:00','00:00'];
+// Genera slots de 00:00 a 23:55 cada 5 minutos
+const TIMES=(function(){const t=[];for(let h=0;h<24;h++)for(let m=0;m<60;m+=5)t.push((h<10?'0':'')+h+':'+(m<10?'0':'')+m);return t;})();
+// Horarios sugeridos rápidos
+const QUICK_TIMES=['06:00','08:00','10:00','12:00','14:00','16:00','18:00','20:00','22:00'];
 const MES_ES=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
 const MES_EN=['January','February','March','April','May','June','July','August','September','October','November','December'];
 const DIA_ES=['Dom','Lun','Mar','Mie','Jue','Vie','Sab'];
@@ -1123,7 +1142,7 @@ function renderConfig(){
   const cl=document.getElementById('cfgList');if(!cl)return;
   if(!products.length){cl.innerHTML='<div class="empty">'+t('e_cfg')+'</div>';return;}
   const days_s=t('dias_short')||DIA_ES;
-  cl.innerHTML=products.map(function(p){const repLabel=p.repeatType==='daily'?t('rep_lbl_daily'):p.repeatType==='once'?t('rep_lbl_once'):(p.repeatDays||[]).map(function(i){return days_s[i];}).join(' ');return '<div class="mc '+p.tipo+'" style="cursor:default;margin-bottom:8px;"><div class="mico"><svg viewBox="0 0 22 22" fill="none"><rect x="2" y="8" width="18" height="6" rx="3" fill="var(--sage-l)" stroke="var(--sage-m)" stroke-width="1.5"/><rect x="2" y="8" width="9" height="6" rx="3" fill="var(--sage)" opacity=".5"/></svg></div><div class="minfo"><div class="mname">'+p.nombre+'</div><div class="mdose">'+(p.dosis||'-')+' - '+repLabel+'</div><div class="mtimes">'+p.horarios.map(function(h){return '<span class="tbdg">'+h+'</span>';}).join('')+(p.alarma?'<span style="font-size:10px;color:var(--gold);margin-left:3px;">alarm</span>':'')+'</div></div><button onclick="delProd(\''+p.id+'\')" style="background:var(--peach-l);border:none;color:var(--peach);width:28px;height:28px;border-radius:50%;font-size:14px;cursor:pointer;flex-shrink:0;">x</button></div>';}).join('');
+  cl.innerHTML=products.map(function(p){const repLabel=p.repeatType==='daily'?t('rep_lbl_daily'):p.repeatType==='once'?t('rep_lbl_once'):(p.repeatDays||[]).map(function(i){return days_s[i];}).join(' ');return '<div class="mc '+p.tipo+'" style="cursor:default;margin-bottom:8px;"><div class="mico"><svg viewBox="0 0 22 22" fill="none"><rect x="2" y="8" width="18" height="6" rx="3" fill="var(--sage-l)" stroke="var(--sage-m)" stroke-width="1.5"/><rect x="2" y="8" width="9" height="6" rx="3" fill="var(--sage)" opacity=".5"/></svg></div><div class="minfo"><div class="mname">'+p.nombre+'</div><div class="mdose">'+(p.dosis||'-')+' - '+repLabel+'</div><div class="mtimes">'+p.horarios.map(function(h){return '<span class="tbdg">'+h+'</span>';}).join('')+(p.alarma?'<span style="font-size:10px;color:var(--gold);margin-left:3px;">&#9874;</span>':'')+'</div></div><div style="display:flex;flex-direction:column;gap:6px;"><button onclick="openAdd(\''+p.id+'\')" style="background:var(--sage-l);border:1.5px solid var(--sage);color:var(--sage-d);width:32px;height:32px;border-radius:50%;font-size:15px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;">&#9998;</button><button onclick="delProd(\''+p.id+'\')" style="background:var(--peach-l);border:1.5px solid var(--peach);color:var(--peach);width:32px;height:32px;border-radius:50%;font-size:14px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;">&times;</button></div></div>';}).join('');
 }
 function delProd(id){if(!confirm(lang==='en'?'Delete?':'Eliminar?'))return;products=products.filter(function(p){return p.id!==id;});saveP();renderConfig();renderHoy();}
 function resetAll(){if(!confirm(lang==='en'?'Reset all data?':'Borrar todos los datos?'))return;products=[];taken={};saveP();saveT();renderHoy();renderConfig();}
@@ -1147,13 +1166,99 @@ function goTab(tab){
 }
 
 /* ── ADD MODAL ── */
-function buildChips(){const c=document.getElementById('timeChips');if(!c)return;c.innerHTML=TIMES.map(function(h){return '<button class="tchip '+(selTimes.includes(h)?'on':'')+'" onclick="toggleTime(this,\''+h+'\')">'+h+'</button>';}).join('');}
+function buildChips(){
+  // Chips de horarios rápidos sugeridos
+  const c=document.getElementById('timeChips');
+  if(!c)return;
+  c.innerHTML=QUICK_TIMES.map(function(h){return '<button class="tchip '+(selTimes.includes(h)?'on':'')+'" onclick="toggleQuickTime(this,\''+h+'\')">'+h+'</button>';}).join('');
+  // Poblar selectores hora y minuto
+  const selH=document.getElementById('mHorH');
+  const selM=document.getElementById('mHorM');
+  if(selH&&!selH.options.length){
+    for(let h=0;h<24;h++){const o=document.createElement('option');o.value=(h<10?'0':'')+h;o.textContent=(h<10?'0':'')+h+' h';selH.appendChild(o);}
+    selH.value='08';
+  }
+  if(selM&&!selM.options.length){
+    for(let m=0;m<60;m+=5){const o=document.createElement('option');o.value=(m<10?'0':'')+m;o.textContent=(m<10?'0':'')+m+' min';selM.appendChild(o);}
+    selM.value='00';
+  }
+  renderSelTimesList();
+}
+function toggleQuickTime(el,h){
+  const i=selTimes.indexOf(h);
+  if(i===-1){selTimes.push(h);el.classList.add('on');}
+  else{selTimes.splice(i,1);el.classList.remove('on');}
+  renderSelTimesList();
+}
+function addCustomTime(){
+  const h=document.getElementById('mHorH').value;
+  const m=document.getElementById('mHorM').value;
+  const hora=h+':'+m;
+  if(!selTimes.includes(hora)){selTimes.push(hora);selTimes.sort();}
+  // actualizar chip rapido si coincide
+  document.querySelectorAll('.tchip').forEach(function(b){
+    if(b.textContent===hora)b.classList.add('on');
+  });
+  renderSelTimesList();
+}
+function removeSelTime(h){
+  selTimes=selTimes.filter(function(t){return t!==h;});
+  document.querySelectorAll('.tchip').forEach(function(b){
+    if(b.textContent===h)b.classList.remove('on');
+  });
+  renderSelTimesList();
+}
+function renderSelTimesList(){
+  const el=document.getElementById('selTimesList');
+  if(!el)return;
+  if(!selTimes.length){el.innerHTML='<span style="font-size:11px;color:var(--txt3);">Sin horarios seleccionados</span>';return;}
+  el.innerHTML=selTimes.map(function(h){
+    return '<span style="display:inline-flex;align-items:center;gap:4px;background:var(--sage-l);border:1.5px solid var(--sage);color:var(--sage-d);border-radius:20px;padding:4px 10px;font-size:12px;font-weight:700;">'+h+'<button onclick="removeSelTime(\''+h+'\')" style="background:none;border:none;color:var(--sage-d);cursor:pointer;font-size:14px;line-height:1;padding:0;margin:0;">&times;</button></span>';
+  }).join('');
+}
 function buildDayChips(){const c=document.getElementById('dayChecks');if(!c)return;const days=t('dias_short')||DIA_ES;c.innerHTML=days.map(function(d,i){return '<button class="day-chk '+(selDays.includes(i)?'on':'')+'" onclick="toggleDay(this,'+i+')">'+d+'</button>';}).join('');}
-function toggleTime(el,h){const i=selTimes.indexOf(h);if(i===-1){selTimes.push(h);el.classList.add('on');}else{selTimes.splice(i,1);el.classList.remove('on');}}
+
 function toggleDay(el,i){const idx=selDays.indexOf(i);if(idx===-1){selDays.push(i);el.classList.add('on');}else{selDays.splice(idx,1);el.classList.remove('on');}}
 function toggleAlarmOpts(checked){document.getElementById('alarmOpts').classList.toggle('hidden',!checked);}
 function selRep(r){selRepMode=r;['rep_daily','rep_once','rep_custom'].forEach(function(id){document.getElementById(id).classList.remove('on');});document.getElementById('rep_'+r).classList.add('on');document.getElementById('customDays').classList.toggle('hidden',r!=='custom');}
-function openAdd(){selTyp='';selTimes=[];selDays=[];selRepMode='daily';currentAcDoses=null;['mNom','mDos','mHorC'].forEach(function(id){document.getElementById(id).value='';});document.getElementById('alarmChk').checked=false;document.getElementById('alarmOpts').classList.add('hidden');document.getElementById('customDays').classList.add('hidden');document.querySelectorAll('.tbtn').forEach(function(b){b.className='tbtn';});document.getElementById('rep_daily').classList.add('on');document.getElementById('rep_once').classList.remove('on');document.getElementById('rep_custom').classList.remove('on');hideAc('acListNom');hideAc('acListDos');buildChips();buildDayChips();applyLang();document.getElementById('addModal').classList.remove('hidden');}
+function openAdd(editId){
+  editingId=editId||null;
+  selTyp='';selTimes=[];selDays=[];selRepMode='daily';currentAcDoses=null;
+  ['mNom','mDos'].forEach(function(id){document.getElementById(id).value='';});
+  document.getElementById('alarmChk').checked=false;
+  document.getElementById('alarmOpts').classList.add('hidden');
+  document.getElementById('customDays').classList.add('hidden');
+  document.querySelectorAll('.tbtn').forEach(function(b){b.className='tbtn';});
+  document.getElementById('rep_daily').classList.add('on');
+  document.getElementById('rep_once').classList.remove('on');
+  document.getElementById('rep_custom').classList.remove('on');
+  hideAc('acListNom');hideAc('acListDos');
+  // Si es edición, pre-cargar datos
+  if(editId){
+    const p=products.find(function(x){return x.id===editId;});
+    if(p){
+      document.getElementById('mNom').value=p.nombre;
+      document.getElementById('mDos').value=p.dosis||'';
+      selTyp=p.tipo;
+      const m={remedio:'tb_r',vitamina:'tb_v',suplemento:'tb_s'},cm={remedio:'on-r',vitamina:'on-v',suplemento:'on-s'};
+      if(m[p.tipo]){document.getElementById(m[p.tipo]).classList.add(cm[p.tipo]);}
+      selTimes=[...p.horarios];
+      selRepMode=p.repeatType||'daily';
+      selDays=p.repeatDays?[...p.repeatDays]:[];
+      document.getElementById('alarmChk').checked=!!p.alarma;
+      if(p.alarma){document.getElementById('alarmOpts').classList.remove('hidden');}
+      const repMap={daily:'rep_daily',once:'rep_once',custom:'rep_custom'};
+      Object.values(repMap).forEach(function(id){document.getElementById(id).classList.remove('on');});
+      if(repMap[selRepMode])document.getElementById(repMap[selRepMode]).classList.add('on');
+      if(selRepMode==='custom')document.getElementById('customDays').classList.remove('hidden');
+    }
+  }
+  buildChips();buildDayChips();applyLang();
+  const title=document.getElementById('addModal').querySelector('.mtit');
+  if(title)title.textContent=editId?(lang==='en'?'Edit medication':'Editar medicamento'):(lang==='en'?'Add medication':'Agregar medicamento');
+  document.getElementById('addModal').classList.remove('hidden');
+}
+let editingId=null;
 function closeAdd(){document.getElementById('addModal').classList.add('hidden');}
 function selType(tp){selTyp=tp;document.querySelectorAll('.tbtn').forEach(function(b){b.className='tbtn';});const m={remedio:'tb_r',vitamina:'tb_v',suplemento:'tb_s'},cm={remedio:'on-r',vitamina:'on-v',suplemento:'on-s'};document.getElementById(m[tp]).classList.add(cm[tp]);}
 
@@ -1183,20 +1288,39 @@ function acSearchDose(q){
   list.classList.remove('hidden');
 }
 function acSelectDose(d){document.getElementById('mDos').value=d;hideAc('acListDos');}
+function addDosisUnit(unit){
+  const inp=document.getElementById('mDos');
+  const cur=inp.value.trim();
+  if(!cur){inp.value='1 '+unit;}
+  else if(/\d$/.test(cur)){inp.value=cur+' '+unit;}
+  else{inp.value=cur+' '+unit;}
+  inp.focus();
+}
 function hideAc(id){const el=document.getElementById(id);if(el)el.classList.add('hidden');}
 document.addEventListener('touchstart',function(e){if(!e.target.closest('.ac-wrap')){hideAc('acListNom');hideAc('acListDos');}},{passive:true});
 document.addEventListener('mousedown',function(e){if(!e.target.closest('.ac-wrap')){hideAc('acListNom');hideAc('acListDos');}});
 
 function saveProd(){
-  const nombre=document.getElementById('mNom').value.trim(),dosis=document.getElementById('mDos').value.trim(),tipo=selTyp;
-  const custom=document.getElementById('mHorC').value.trim();
+  const nombre=document.getElementById('mNom').value.trim();
+  const dosis=document.getElementById('mDos').value.trim();
+  const tipo=selTyp;
   if(!nombre){alert(lang==='en'?'Enter name':'Ingresa el nombre');return;}
   if(!tipo){alert(lang==='en'?'Select type':'Selecciona el tipo');return;}
-  let times=[...selTimes];if(custom&&/^\d{2}:\d{2}$/.test(custom))times.push(custom);
-  if(!times.length){alert(lang==='en'?'Select a time':'Selecciona un horario');return;}
-  times.sort();const alarma=document.getElementById('alarmChk').checked;
+  const times=[...selTimes];
+  if(!times.length){alert(lang==='en'?'Select at least one time':'Selecciona al menos un horario');return;}
+  times.sort();
+  const alarma=document.getElementById('alarmChk').checked;
   const repeatDays=selRepMode==='custom'?[...selDays]:null;
-  products.push({id:Date.now().toString(),nombre:nombre,dosis:dosis,tipo:tipo,horarios:times,alarma:alarma,repeatType:selRepMode,repeatDays:repeatDays,createdDate:getToday()});
+  if(editingId){
+    // Editar medicamento existente
+    const idx=products.findIndex(function(p){return p.id===editingId;});
+    if(idx!==-1){
+      products[idx]={...products[idx],nombre:nombre,dosis:dosis,tipo:tipo,horarios:times,alarma:alarma,repeatType:selRepMode,repeatDays:repeatDays};
+    }
+  } else {
+    products.push({id:Date.now().toString(),nombre:nombre,dosis:dosis,tipo:tipo,horarios:times,alarma:alarma,repeatType:selRepMode,repeatDays:repeatDays,createdDate:getToday()});
+  }
+  editingId=null;
   saveP();closeAdd();renderHoy();updateStreak();if(alarma)scheduleAllAlarms();
 }
 
