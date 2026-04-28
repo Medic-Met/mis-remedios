@@ -231,12 +231,12 @@ select.finp{cursor:pointer;}
 
 /* MODAL */
 .mov{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(58,49,44,.5);display:flex;align-items:flex-end;z-index:300;}
-.msh{background:#fff;border-radius:24px 24px 0 0;padding:20px 18px calc(22px + var(--safe-bottom));width:100%;max-height:92dvh;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+.msh{background:#fff;border-radius:24px 24px 0 0;padding:20px 22px calc(22px + var(--safe-bottom));width:100%;max-height:92dvh;overflow-y:auto;-webkit-overflow-scrolling:touch;}
 .mhdl{width:38px;height:4px;background:var(--bdr);border-radius:2px;margin:0 auto 16px;}
 .mh2{font-size:18px;font-family:var(--fh);font-style:italic;color:var(--txt);margin-bottom:14px;}
 
 /* SETUP */
-.setup{position:fixed;top:0;left:0;right:0;bottom:0;background:var(--warm);z-index:400;overflow-y:auto;padding:calc(var(--safe-top)+24px) 20px calc(var(--safe-bottom)+20px);}
+.setup{position:fixed;top:0;left:0;right:0;bottom:0;background:var(--warm);z-index:400;overflow-y:auto;padding:calc(var(--safe-top)+24px) 24px calc(var(--safe-bottom)+20px);max-width:480px;margin:0 auto;}
 .stit2{text-align:center;font-size:25px;font-family:var(--fh);color:var(--txt);margin-bottom:4px;}
 .ssub{text-align:center;font-size:14px;color:var(--txt3);font-style:italic;margin-bottom:20px;font-family:var(--fh);}
 .sdots{display:flex;justify-content:center;gap:8px;margin-bottom:20px;}
@@ -245,7 +245,9 @@ select.finp{cursor:pointer;}
 .sstep{display:none;}.sstep.on{display:block;}
 
 /* BDAY */
-.bday{background:linear-gradient(135deg,var(--peach-l),var(--gold-l));border-radius:16px;padding:13px;margin-bottom:12px;text-align:center;border:1px solid var(--gold-m);}
+.bday{background:linear-gradient(135deg,#fff9e6,#fff0f5);border-radius:20px;padding:0;margin-bottom:12px;text-align:center;border:2px solid #FFD700;overflow:hidden;position:relative;}
+.bday-canvas{width:100%;height:180px;display:block;}
+.bday-msg{position:absolute;bottom:12px;left:0;right:0;font-size:17px;font-family:var(--fh);color:#c0392b;font-weight:700;text-shadow:0 1px 2px rgba(255,255,255,.8);}
 
 /* TOAST */
 .toast{position:fixed;top:0;left:0;right:0;background:var(--sage);color:#fff;z-index:500;transform:translateY(-100%);transition:transform .4s cubic-bezier(.34,1.56,.64,1);padding-top:var(--safe-top);}
@@ -303,6 +305,44 @@ select.finp{cursor:pointer;}
         <button class="lbtn" onclick="selLang('zh',this)">Zhongwen</button><button class="lbtn" onclick="selLang('ja',this)">Nihongo</button>
       </div>
     </div>
+    <div class="fld" style="margin-top:12px;">
+      <label class="flbl" id="ss_lbl_pais">Tu país</label>
+      <select class="finp" id="ssPais" style="font-size:15px;">
+        <option value="">-- Selecciona tu país --</option>
+        <option value="AR">🇦🇷 Argentina</option>
+        <option value="BO">🇧🇴 Bolivia</option>
+        <option value="BR">🇧🇷 Brasil</option>
+        <option value="CL" selected>🇨🇱 Chile</option>
+        <option value="CO">🇨🇴 Colombia</option>
+        <option value="CR">🇨🇷 Costa Rica</option>
+        <option value="CU">🇨🇺 Cuba</option>
+        <option value="DO">🇩🇴 Rep. Dominicana</option>
+        <option value="EC">🇪🇨 Ecuador</option>
+        <option value="SV">🇸🇻 El Salvador</option>
+        <option value="GT">🇬🇹 Guatemala</option>
+        <option value="HN">🇭🇳 Honduras</option>
+        <option value="MX">🇲🇽 México</option>
+        <option value="NI">🇳🇮 Nicaragua</option>
+        <option value="PA">🇵🇦 Panamá</option>
+        <option value="PY">🇵🇾 Paraguay</option>
+        <option value="PE">🇵🇪 Perú</option>
+        <option value="PR">🇵🇷 Puerto Rico</option>
+        <option value="UY">🇺🇾 Uruguay</option>
+        <option value="VE">🇻🇪 Venezuela</option>
+        <option value="ES">🇪🇸 España</option>
+        <option value="US">🇺🇸 Estados Unidos</option>
+        <option value="CA">🇨🇦 Canadá</option>
+        <option value="DE">🇩🇪 Alemania</option>
+        <option value="FR">🇫🇷 Francia</option>
+        <option value="IT">🇮🇹 Italia</option>
+        <option value="PT">🇵🇹 Portugal</option>
+        <option value="GB">🇬🇧 Reino Unido</option>
+        <option value="AU">🇦🇺 Australia</option>
+        <option value="JP">🇯🇵 Japón</option>
+        <option value="CN">🇨🇳 China</option>
+        <option value="OTHER">🌍 Otro</option>
+      </select>
+    </div>
     <button class="btn-main" onclick="ssNext()" id="ss_btn_cont">Continuar</button>
   </div>
   <div class="sstep" id="ss1">
@@ -355,7 +395,7 @@ select.finp{cursor:pointer;}
   <div class="cont">
     <!-- HOY -->
     <div class="tab on" id="tab-hoy">
-      <div class="bday hidden" id="bdayBanner"><div id="bdayMsg" style="font-size:15px;color:var(--txt);font-family:var(--fh);text-align:center;padding:6px 0;"></div></div>
+      <div class="bday hidden" id="bdayBanner"><canvas class="bday-canvas" id="bdayCanvas"></canvas><div class="bday-msg" id="bdayMsg"></div></div>
       <div class="hero-card"><img src="" id="heroImg" alt="" /><div class="hero-ov"><div class="hero-ot" id="heroTitle">Tus medicamentos de hoy</div><div class="hero-os" id="heroSub">Cuida tu salud cada dia</div></div></div>
       <!-- STREAK -->
       <div class="streak-card">
@@ -532,7 +572,20 @@ select.finp{cursor:pointer;}
             <option value="de">Deutsch</option><option value="it">Italiano</option><option value="zh">Zhongwen</option><option value="ja">Nihongo</option>
           </select>
         </div>
-        <button class="btn-main" onclick="saveProfile()" id="btn_save_p">Guardar cambios</button>
+        <div class="fld" style="margin-top:4px;">
+        <label class="flbl">País</label>
+        <select class="finp" id="profPais" style="font-size:15px;">
+          <option value="CL">🇨🇱 Chile</option>
+          <option value="AR">🇦🇷 Argentina</option>
+          <option value="PE">🇵🇪 Perú</option>
+          <option value="CO">🇨🇴 Colombia</option>
+          <option value="MX">🇲🇽 México</option>
+          <option value="ES">🇪🇸 España</option>
+          <option value="US">🇺🇸 Estados Unidos</option>
+          <option value="OTHER">🌍 Otro</option>
+        </select>
+      </div>
+      <button class="btn-main" onclick="saveProfile()" id="btn_save_p">Guardar cambios</button>
       </div>
       <p class="stit" id="lbl_misprod">Mis productos</p>
       <div class="card" style="margin-bottom:10px;"><div id="cfgList"><div class="empty" id="e_cfg">Sin productos</div></div></div>
@@ -577,8 +630,8 @@ select.finp{cursor:pointer;}
     </div>
     <div class="fld">
       <label class="flbl" id="m_lbl_hor">Horarios de toma</label>
-      <div style="font-size:11px;color:var(--txt3);margin-bottom:5px;">Atajos rápidos:</div>
-      <div class="tchips" id="timeChips"></div>
+      <div style="font-size:11px;color:var(--txt3);margin-bottom:5px;">Accesos rápidos:</div>
+      <div class="tchips" id="timeChips" style="display:none;"></div>
       <div style="display:flex;gap:8px;margin-top:8px;align-items:center;">
         <select class="finp" id="mHorH" style="flex:1;padding:10px 8px;"></select>
         <span style="font-size:18px;color:var(--txt2);font-weight:700;">:</span>
@@ -930,7 +983,7 @@ const DIA_EN=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 
 /* ── STATE ── */
 let lang='es',ssStep=0,ssGen='',selTyp='',selTimes=[],selRepMode='daily',selDays=[],toastTmr=null,alarmFired={},currentAcDoses=null,selMoodVal=0,selSyms=[];
-let products=[],taken={},profile={nombre:'',edad:'',genero:'nb',cumple:'',lang:'es'};
+let products=[],taken={},profile={nombre:'',edad:'',genero:'nb',cumple:'',lang:'es',pais:'CL'};
 let diaryLog=[],vitalLog=[],citasList_=[];
 
 try{products=JSON.parse(localStorage.getItem('mr9_p')||'[]');}catch(e){}
@@ -991,6 +1044,7 @@ function ssNext(){
 }
 function ssFinish(){
   const c=document.getElementById('ssCump').value;if(c)profile.cumple=c;
+  const paisEl=document.getElementById('ssPais');if(paisEl&&paisEl.value)profile.pais=paisEl.value;
   profile.lang=lang;savePr();
   document.getElementById('setupScreen').style.display='none';
   applyLang();renderHoy();loadProfForm();renderSalud();updateStreak();setTimeout(scheduleAllAlarms,1500);
@@ -1013,7 +1067,7 @@ function renderHoy(){
   const months=lang==='es'?MES_ES:MES_EN,days=lang==='es'?DIA_ES:DIA_EN;
   document.getElementById('hdrDate').textContent=days[now.getDay()]+' '+now.getDate()+' '+months[now.getMonth()]+' '+now.getFullYear();
   const bb=document.getElementById('bdayBanner');
-  if(profile.cumple){const b=new Date(profile.cumple+'T12:00:00');if(now.getMonth()===b.getMonth()&&now.getDate()===b.getDate()){bb.classList.remove('hidden');const gk=(profile.genero||'nb')==='f'?'f':(profile.genero||'nb')==='m'?'m':'nb';document.getElementById('bdayMsg').textContent=t('bday'+gk).replace('{n}',profile.nombre||'');}else bb.classList.add('hidden');}else bb.classList.add('hidden');
+  if(profile.cumple){const b=new Date(profile.cumple+'T12:00:00');if(now.getMonth()===b.getMonth()&&now.getDate()===b.getDate()){bb.classList.remove('hidden');const gk=(profile.genero||'nb')==='f'?'f':(profile.genero||'nb')==='m'?'m':'nb';document.getElementById('bdayMsg').textContent=t('bday'+gk).replace('{n}',profile.nombre||'');startBdayAnimation();}else bb.classList.add('hidden');}else bb.classList.add('hidden');
   gs('heroTitle','heroTitle');gs('heroSub','heroSub');gs('btn_share_lbl','btn_share_lbl');gs('lbl_cumpl','lbl_cumpl');gs('lbl_prog','lbl_prog');
   const list=document.getElementById('listHoy');
   if(!products.length){list.innerHTML='<div class="empty">'+t('e_hoy')+'</div>';document.getElementById('progFill').style.width='0%';document.getElementById('progPct').textContent='0%';document.getElementById('nextTime').textContent='-';document.getElementById('nextDesc').textContent=t('sinmas');document.getElementById('cntdown').textContent='';return;}
@@ -1480,6 +1534,141 @@ function saveProd(){
   }
   editingId=null;
   saveP();closeAdd();renderHoy();updateStreak();if(alarma)scheduleAllAlarms();
+}
+
+
+/* ── CUMPLEAÑOS ANIMACIÓN ── */
+function startBdayAnimation(){
+  const canvas=document.getElementById('bdayCanvas');
+  if(!canvas)return;
+  const ctx=canvas.getContext('2d');
+  canvas.width=canvas.offsetWidth||320;
+  canvas.height=180;
+  const W=canvas.width,H=canvas.height;
+  const particles=[];
+  const balloons=[];
+  const ribbons=[];
+  const COLORS=['#FF6B6B','#FFD93D','#6BCB77','#4D96FF','#FF6BFF','#FF922B','#F06595','#74C0FC'];
+
+  // Fuegos artificiales
+  for(let i=0;i<40;i++){
+    particles.push({
+      x:Math.random()*W, y:Math.random()*H*0.6,
+      vx:(Math.random()-0.5)*3, vy:(Math.random()-0.5)*3,
+      r:Math.random()*3+1, color:COLORS[Math.floor(Math.random()*COLORS.length)],
+      life:Math.random()*60+40, maxLife:100, type:'spark'
+    });
+  }
+  // Serpentinas
+  for(let i=0;i<25;i++){
+    ribbons.push({
+      x:Math.random()*W, y:-20,
+      vx:(Math.random()-0.5)*2, vy:Math.random()*2+1,
+      w:Math.random()*8+4, h:Math.random()*16+8,
+      color:COLORS[Math.floor(Math.random()*COLORS.length)],
+      angle:Math.random()*Math.PI*2, spin:( Math.random()-0.5)*0.2
+    });
+  }
+  // Globos
+  const BALLOON_COLORS=['#FF6B6B','#FFD93D','#6BCB77','#4D96FF','#FF6BFF'];
+  for(let i=0;i<5;i++){
+    balloons.push({
+      x:30+i*(W/5), y:H+60+Math.random()*30,
+      vy:-(Math.random()*0.8+0.5),
+      swing:Math.random()*Math.PI*2,
+      color:BALLOON_COLORS[i%5], r:18
+    });
+  }
+
+  // Torta en el centro
+  function drawCake(x,y){
+    // base
+    ctx.fillStyle='#D4A574';
+    ctx.beginPath();ctx.ellipse(x,y+24,28,8,0,0,Math.PI*2);ctx.fill();
+    ctx.fillRect(x-28,y,56,24);
+    ctx.fillStyle='#F4C2A1';
+    ctx.beginPath();ctx.ellipse(x,y,28,8,0,0,Math.PI*2);ctx.fill();
+    // crema
+    ctx.fillStyle='#FFF0F5';
+    ctx.beginPath();ctx.ellipse(x,y,28,8,0,0,Math.PI*2);ctx.fill();
+    for(let i=0;i<6;i++){
+      const a=i/6*Math.PI*2;
+      ctx.beginPath();ctx.arc(x+Math.cos(a)*18,y+Math.sin(a)*6,5,0,Math.PI*2);ctx.fillStyle='#FFB3C6';ctx.fill();
+    }
+    // capa superior
+    ctx.fillStyle='#FF8FAB';
+    ctx.fillRect(x-28,y-22,56,22);
+    ctx.fillStyle='#FFB3C6';
+    ctx.beginPath();ctx.ellipse(x,y-22,28,8,0,0,Math.PI*2);ctx.fill();
+    // velas
+    const candleColors=['#FF6B6B','#FFD93D','#6BCB77'];
+    for(let i=0;i<3;i++){
+      const cx=x-14+i*14;
+      ctx.fillStyle=candleColors[i];
+      ctx.fillRect(cx-3,y-38,6,16);
+      // llama
+      ctx.fillStyle='#FFD93D';
+      ctx.beginPath();ctx.ellipse(cx,y-40,3,6,0,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle='#FF6B6B';
+      ctx.beginPath();ctx.ellipse(cx,y-42,1.5,3,0,0,Math.PI*2);ctx.fill();
+    }
+  }
+
+  let frame=0;
+  function animate(){
+    ctx.clearRect(0,0,W,H);
+
+    // Torta centrada
+    drawCake(W/2, H-50);
+
+    // Serpentinas
+    ribbons.forEach(function(r){
+      r.x+=r.vx; r.y+=r.vy; r.angle+=r.spin;
+      if(r.y>H+20){r.y=-20;r.x=Math.random()*W;}
+      ctx.save();ctx.translate(r.x,r.y);ctx.rotate(r.angle);
+      ctx.fillStyle=r.color;ctx.fillRect(-r.w/2,-r.h/2,r.w,r.h);ctx.restore();
+    });
+
+    // Globos
+    balloons.forEach(function(b){
+      b.y+=b.vy; b.swing+=0.03;
+      b.x+=Math.sin(b.swing)*0.5;
+      if(b.y<-50){b.y=H+60;}
+      // cuerda
+      ctx.strokeStyle='rgba(0,0,0,0.2)';ctx.lineWidth=1;
+      ctx.beginPath();ctx.moveTo(b.x,b.y+b.r);ctx.lineTo(b.x,b.y+b.r+30);ctx.stroke();
+      // globo
+      ctx.fillStyle=b.color;
+      ctx.beginPath();ctx.ellipse(b.x,b.y,b.r,b.r*1.2,0,0,Math.PI*2);ctx.fill();
+      // brillo
+      ctx.fillStyle='rgba(255,255,255,0.4)';
+      ctx.beginPath();ctx.ellipse(b.x-5,b.y-5,5,7,Math.PI/4,0,Math.PI*2);ctx.fill();
+      // nudo
+      ctx.fillStyle=b.color;
+      ctx.beginPath();ctx.arc(b.x,b.y+b.r*1.2,3,0,Math.PI*2);ctx.fill();
+    });
+
+    // Partículas (fuegos)
+    for(let i=particles.length-1;i>=0;i--){
+      const p=particles[i];
+      p.x+=p.vx; p.y+=p.vy; p.vy+=0.05; p.life--;
+      const alpha=p.life/p.maxLife;
+      ctx.globalAlpha=alpha;
+      ctx.fillStyle=p.color;
+      ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fill();
+      ctx.globalAlpha=1;
+      if(p.life<=0){
+        // renacer
+        p.x=Math.random()*W; p.y=Math.random()*H*0.5;
+        p.vx=(Math.random()-0.5)*4; p.vy=(Math.random()-0.5)*4;
+        p.life=p.maxLife; p.color=COLORS[Math.floor(Math.random()*COLORS.length)];
+      }
+    }
+
+    frame++;
+    requestAnimationFrame(animate);
+  }
+  animate();
 }
 
 /* ── SHARE ── */
